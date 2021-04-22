@@ -80,7 +80,7 @@ class CliPrompt
 
             if ($output !== null) {
                 // output a newline to be on par with the regular prompt()
-                echo PHP_EOL;
+                echo \PHP_EOL;
                 return self::trimAnswer($output);
             }
         }
@@ -104,7 +104,7 @@ class CliPrompt
 
                 if ($output !== null) {
                     // output a newline to be on par with the regular prompt()
-                    echo PHP_EOL;
+                    echo \PHP_EOL;
                     return self::trimAnswer($output);
                 }
             }
