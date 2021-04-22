@@ -13,19 +13,21 @@ namespace Seld\CliPrompt;
 
 class CliPrompt
 {
+    private const SHELLS = [ 'bash', 'zsh', 'ksh', 'csh', 'sh' ];
+
     /**
      * Prompts the user for input and shows what they type
      *
      * @return string
      */
-    public static function prompt()
+    public static function prompt(): string
     {
-        $stdin = fopen('php://stdin', 'r');
+        $stdin = \fopen('php://stdin', 'r');
         if (false === $stdin) {
             throw new \RuntimeException('Failed to open STDIN, could not prompt user for input.');
         }
-        $answer = self::trimAnswer(fgets($stdin, 4096));
-        fclose($stdin);
+        $answer = self::trimAnswer(\fgets($stdin, 4096));
+        \fclose($stdin);
 
         return $answer;
     }
@@ -39,70 +41,70 @@ class CliPrompt
      * @return string
      * @throws \RuntimeException on failure to prompt, unless $allowFallback is true
      */
-    public static function hiddenPrompt($allowFallback = false)
+    public static function hiddenPrompt(bool $allowFallback = false): string
     {
         // handle windows
-        if (defined('PHP_WINDOWS_VERSION_BUILD')) {
+        if (\defined('PHP_WINDOWS_VERSION_BUILD')) {
             // fallback to hiddeninput executable
             $exe = __DIR__.'\\..\\res\\hiddeninput.exe';
 
             // handle code running from a phar
-            if ('phar:' === substr(__FILE__, 0, 5)) {
-                $tmpExe = sys_get_temp_dir().'/hiddeninput.exe';
+            if ('phar:' === \substr(__FILE__, 0, 5)) {
+                $tmpExe = \sys_get_temp_dir() . '/hiddeninput.exe';
 
                 // use stream_copy_to_stream instead of copy
                 // to work around https://bugs.php.net/bug.php?id=64634
-                $source = fopen($exe, 'r');
-                $target = fopen($tmpExe, 'w+');
+                $source = \fopen($exe, 'r');
                 if (false === $source) {
                     throw new \RuntimeException('Failed to open '.$exe.' for reading.');
                 }
+
+                $target = \fopen($tmpExe, 'w+');
                 if (false === $target) {
                     throw new \RuntimeException('Failed to open '.$tmpExe.' for writing.');
                 }
-                stream_copy_to_stream($source, $target);
-                fclose($source);
-                fclose($target);
+                \stream_copy_to_stream($source, $target);
+                \fclose($source);
+                \fclose($target);
                 unset($source, $target);
 
                 $exe = $tmpExe;
             }
 
-            $output = shell_exec($exe);
+            $output = \shell_exec($exe);
 
             // clean up
             if (isset($tmpExe)) {
-                unlink($tmpExe);
+                \unlink($tmpExe);
             }
 
             if ($output !== null) {
                 // output a newline to be on par with the regular prompt()
                 echo PHP_EOL;
-
                 return self::trimAnswer($output);
             }
         }
 
-        if (file_exists('/usr/bin/env')) {
+        if (\file_exists('/usr/bin/env')) {
             // handle other OSs with bash/zsh/ksh/csh if available to hide the answer
+            $shell = '';
             $test = "/usr/bin/env %s -c 'echo OK' 2> /dev/null";
-            foreach (array('bash', 'zsh', 'ksh', 'csh', 'sh') as $sh) {
-                $output = shell_exec(sprintf($test, $sh));
-                if (is_string($output) && 'OK' === rtrim($output)) {
+            foreach (self::SHELLS as $sh) {
+                $output = \shell_exec( \sprintf($test, $sh) );
+                if (\is_string($output) && 'OK' === \rtrim($output)) {
                     $shell = $sh;
                     break;
                 }
             }
 
-            if (isset($shell)) {
+            if (\strlen($shell > 0)) {
                 $readCmd = ($shell === 'csh') ? 'set mypassword = $<' : 'read -r mypassword';
-                $command = sprintf("/usr/bin/env %s -c 'stty -echo; %s; stty echo; echo \$mypassword'", $shell, $readCmd);
-                $output = shell_exec($command);
+                $command = \sprintf("/usr/bin/env %s -c 'stty -echo; %s; stty echo; echo \$mypassword'", $shell, $readCmd);
+                $output = \shell_exec($command);
 
                 if ($output !== null) {
                     // output a newline to be on par with the regular prompt()
                     echo PHP_EOL;
-
                     return self::trimAnswer($output);
                 }
             }
@@ -120,8 +122,8 @@ class CliPrompt
      * @param string|bool $str
      * @return string
      */
-    private static function trimAnswer($str)
+    private static function trimAnswer($str): string
     {
-        return preg_replace('{\r?\n$}D', '', (string) $str) ?: '';
+        return \preg_replace('{\r?\n$}D', '', (string) $str) ?: '';
     }
 }
