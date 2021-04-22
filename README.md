@@ -47,7 +47,7 @@ is trimmed.
 Requirements
 ------------
 
-PHP 5.3 and above
+PHP 7.4 and above
 
 License
 -------
